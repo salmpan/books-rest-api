@@ -30,7 +30,7 @@ class Publisher(models.Model):
 
 class Book(models.Model):
     title = models.CharField(max_length=100, blank=False)
-    description = models.CharField(max_length=255, blank=True)
+    description = models.CharField(max_length=255, blank=True, null=True)
     isbn = ISBNField(clean_isbn=True, unique=True) 
     pub_date = models.DateField(blank=True, null=True)
     visibility = models.BooleanField(default=True)

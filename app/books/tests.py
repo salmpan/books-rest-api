@@ -1,3 +1,4 @@
+import json
 from urllib.parse import urljoin
 #
 from rest_framework import status
@@ -50,7 +51,7 @@ class BookTest(APITestCase):
         data = {
             "name": "HarperCollins Publishers",
             "address": "London, United Kingdom",
-            "phone": "+41524204242"
+            "phone_number": "+41524204242"
         }
 
         response = self.client.post(urljoin(self.base_url, "add-publisher/"), data, format="json")
@@ -63,12 +64,94 @@ class BookTest(APITestCase):
         response = self.client.post(urljoin(self.base_url, "add-publisher/"), data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        data = {
+            "name": "publisher-1",
+            "phone_number": "lorem ipsum"  # Note: invalid phone number
+        }
 
-    def test_manage_book(self):
-        # TODO
-        pass
+        response = self.client.post(urljoin(self.base_url, "add-publisher/"), data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-    def test_list_books(self):
-        # TODO
-        pass
+    def test_manage_books(self):
+
+        # Add an author and a publisher
+
+        data = {
+            "first_name": "Isaac",
+            "last_name": "Asimov",
+            "email": "asimov@mail.com"
+        }
+
+        self.client.post(urljoin(self.base_url, "add-author/"), data, format="json")
+
+        data = {
+            "name": "HarperCollins Publishers",
+            "address": "London, United Kingdom",
+            "phone_number": "+41524204242"
+        }
+
+        self.client.post(urljoin(self.base_url, "add-publisher/"), data, format="json")
+
+        # Add a book (valid, all fields)
+        data = {
+            "title": "test-book-1",
+            "description": "lorem ipsum",
+            "isbn": "9780393059748",
+            "pub_date": "2020-12-10",
+            "author": 1,
+            "publisher": 1
+        }
+
+        response = self.client.post(urljoin(self.base_url, "add-book/"), data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["visibility"], True)
+
+        data = {
+            "title": "test-book-2",
+            "description": "lorem ipsum",
+            "isbn": "9780393059748",  # uniqueness constraint
+            "pub_date": "2020-12-10",
+            "author": 1,
+            "publisher": 1
+        }
+
+        response = self.client.post(urljoin(self.base_url, "add-book/"), data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Add another book (valid, required fields only)
+        data = {
+            "title": "test-book-3",
+            "isbn": "9781472103536",
+            "author": 1
+        }
+
+        response = self.client.post(urljoin(self.base_url, "add-book/"), data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.json(), {
+            "title": "test-book-3",
+            "isbn": "9781472103536",
+            "author": 1,
+            "description": None,
+            "pub_date": None,
+            "publisher": None,
+            "visibility": True
+        })
+
+        # Update book (id=2)
+        data = {
+            "description": "lorem ipsum",
+            "visibility": False,
+        }
+
+        response = self.client.patch(urljoin(self.base_url, "upd-book/2/"), data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response.json(), {
+            "title": "test-book-3",
+            "isbn": "9781472103536",
+            "author": 1,
+            "description": "lorem ipsum",
+            "pub_date": None,
+            "publisher": None,
+            "visibility": False
+        })

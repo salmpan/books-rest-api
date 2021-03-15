@@ -62,10 +62,11 @@ class UpdBookAPI(generics.RetrieveAPIView):
     serializer_class = serializers.BookSerializer
 
     def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        book = get_object_or_404(models.Book, id=self.kwargs["id"])
+        serializer = self.get_serializer(book, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

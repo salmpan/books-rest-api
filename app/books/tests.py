@@ -44,7 +44,7 @@ class BookTest(APITestCase):
         }
 
         response = self.client.post(urljoin(self.base_url, "add-author/"), data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
     def test_add_publishers(self):
@@ -107,6 +107,25 @@ class BookTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["visibility"], True)
 
+        # View book detail
+        response = self.client.get(urljoin(self.base_url, "book/1/"), format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), {
+            'title': 'test-book-1',
+            'isbn': '9780393059748',
+            'author_name': 'Asimov, Isaac',
+            'author_email': 'asimov@mail.com',
+            'author_birthday': None,
+            'pub_date': '2020-12-10',
+            'publisher_name': 'HarperCollins Publishers',
+            'publisher_address': 'London, United Kingdom'
+        })
+
+        # Access book (non-existent)
+        response = self.client.get(urljoin(self.base_url, "book/123/"), format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Add a book (invalid)
         data = {
             "title": "test-book-2",
             "description": "lorem ipsum",
@@ -155,3 +174,22 @@ class BookTest(APITestCase):
             "publisher": None,
             "visibility": False
         })
+
+        # List all books
+        response = self.client.get(urljoin(self.base_url, "books/"), data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Two books added, one of them should be returned according to specs.
+        self.assertEqual(len(response.json()), 1)
+
+        # Delete book (non-existent)
+        response = self.client.delete(urljoin(self.base_url, "del-book/102/"), data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Delete book
+        response = self.client.delete(urljoin(self.base_url, "del-book/2/"), data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Access book (now non-existent)
+        response = self.client.get(urljoin(self.base_url, "book/123/"), format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

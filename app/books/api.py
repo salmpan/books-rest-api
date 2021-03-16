@@ -76,4 +76,4 @@ class DelBookAPI(generics.RetrieveAPIView):
         book = get_object_or_404(models.Book, id=self.kwargs["id"])
         book.delete()
 
-        return Response("deleted")
+        return Response({"detail": "Deleted"}, status=status.HTTP_200_OK)

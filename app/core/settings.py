@@ -13,7 +13,7 @@ SECRET_KEY = 'leugxb_$iu_m&8aj0^&@37rzg33(2u^0w-tvtz6bazncl)51@+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
 CORS_ORIGIN_ALLOW_ALL = True
 
